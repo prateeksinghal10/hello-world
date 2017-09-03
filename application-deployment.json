@@ -1,0 +1,92 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "dockerhelloworld",
+    "annotations": {
+      "tags": "java,docker,tomcat"
+    }
+  },
+  "objects": [
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "hello-world"
+      },
+      "spec": {
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "hello-world"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "hello-world-container",
+                "image": "dockerprateek/helloworld:0.0.2",
+                "ports": [
+                  {
+                    "containerPort": 8080,
+                    "protocol": "TCP"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "replicas": 1,
+        "selector": {
+          "name": "hello-world"
+        },
+        "strategy": {
+          "type": "Rolling"
+        }
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "helloworld-service"
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "web",
+            "protocol": "TCP",
+            "port": 5432,
+            "targetPort": 8080,
+            "nodePort": 0
+          }
+        ],
+        "selector": {
+          "name": "hello-world"
+        },
+        "type": "ClusterIP",
+        "sessionAffinity": "None"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "helloworld-route",
+        "annotations": {
+          "template.openshift.io/expose-uri": "http://{.spec.host}{.spec.path}"
+        }
+      },
+      "spec": {
+        "to": {
+          "kind": "Service",
+          "name": "helloworld-service"
+        }
+      },
+      "status": {}
+    }
+  ]
+}
